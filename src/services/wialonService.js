@@ -14,7 +14,8 @@ async function wialonAuthentication() {
       data.push(response.data);
     })
     .catch((e) => {
-      console.log("Erro ao fazer requisicão no wialon authentication: ", e);
+      console.log("Erro ao fazer requisição no wialon: ", e);
+      data.push(e);
     });
   return data;
 }
