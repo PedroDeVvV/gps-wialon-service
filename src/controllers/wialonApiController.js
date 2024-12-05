@@ -1,6 +1,8 @@
+import "dotenv/config";
 import express from "express";
 import wialonService from "../services/wialonService.js";
 import sendMessageQueue from "../services/messaging/send.js";
+
 
 const router = express.Router();
 
@@ -27,8 +29,9 @@ router.get("/getItems", async (req, res) => {
     });
   }
 
+  const queueName = process.env.QUEUE_NAME;
   res.send(JSON.parse(items));
-  sendMessageQueue("items", items);
+  sendMessageQueue(queueName, items);
 });
 
 export default router;
