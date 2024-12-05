@@ -17,8 +17,6 @@ router.get("/getItems", async (req, res) => {
     const sessionId = await wialonService.wialonAuthentication();
     let data = [];
 
-    console.log("sid",sessionId[0].eid)
-
     const params = {
       spec: {
         itemsType: "avl_unit",
