@@ -20,4 +20,29 @@ async function wialonAuthentication() {
   return data;
 }
 
-export default { wialonAuthentication };
+async function wialonGetItems(sid) {
+  const data = [];
+  const params = {
+    spec: {
+      itemsType: "avl_unit",
+      propName: "sys_name",
+      propValueMask: "*",
+      sortType: "sys_name",
+    },
+    force: 1,
+    flags: 1025,
+    from: 0,
+    to: 0,
+  };
+
+  const encodedParams = encodeURIComponent(JSON.stringify(params));
+  const response = await axios.get(
+    `https://hst-api.wialon.com/wialon/ajax.html?svc=core/search_items&sid=${sid}&params=${encodedParams}`
+  );
+
+  data.push(response.data);
+
+  return data;
+}
+
+export default { wialonAuthentication, wialonGetItems };

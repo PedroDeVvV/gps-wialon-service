@@ -1,6 +1,6 @@
 import express from "express";
 import wialonService from "../services/wialonService.js";
-import axios from "axios";
+import sendMessageQueue from "../services/messaging/send.js";
 
 const router = express.Router();
 
@@ -13,36 +13,12 @@ router.get("/authentication", async (req, res) => {
 });
 
 router.get("/getItems", async (req, res) => {
+  let items = "";
+  let sessionId = "";
   try {
-    const sessionId = await wialonService.wialonAuthentication();
-    let data = [];
-
-    console.log("sid",sessionId[0].eid)
-
-    const params = {
-      spec: {
-        itemsType: "avl_unit",
-        propName: "sys_name",
-        propValueMask: "*",
-        sortType: "sys_name",
-      },
-      force: 1,
-      flags: 1025,
-      from: 0,
-      to: 0,
-    };
-    const encodedParams = encodeURIComponent(JSON.stringify(params));
-
-    const response = await axios.get(
-      `https://hst-api.wialon.com/wialon/ajax.html?svc=core/search_items&sid=${sessionId[0].eid}&params=${encodedParams}`
-    );
-
-    data.push(response.data);
-
-    return res.status(200).json({
-      success: true,
-      data: data,
-    });
+    sessionId = await wialonService.wialonAuthentication();
+    items = await wialonService.wialonGetItems(sessionId[0].eid);
+    items = JSON.stringify(items);
   } catch (e) {
     console.error("ERRO: ", e.message);
     return res.status(500).json({
@@ -50,6 +26,9 @@ router.get("/getItems", async (req, res) => {
       message: e.message,
     });
   }
+
+  res.send(JSON.parse(items));
+  sendMessageQueue("items", items);
 });
 
 export default router;
