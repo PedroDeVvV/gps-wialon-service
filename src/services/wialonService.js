@@ -20,12 +20,8 @@ async function wialonAuthentication() {
   return data;
 }
 
-
-
-async function wialonGetItens(sid, res){
-
-
-    const data = []
+async function wialonGetItems(sid) {
+  const data = [];
   const params = {
     spec: {
       itemsType: "avl_unit",
@@ -43,11 +39,10 @@ async function wialonGetItens(sid, res){
   const response = await axios.get(
     `https://hst-api.wialon.com/wialon/ajax.html?svc=core/search_items&sid=${sid}&params=${encodedParams}`
   );
-  
+
   data.push(response.data);
 
-  return data
-
+  return data;
 }
 
-export default { wialonAuthentication, wialonGetItens };
+export default { wialonAuthentication, wialonGetItems };

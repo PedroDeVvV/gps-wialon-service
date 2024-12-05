@@ -13,7 +13,6 @@ function sendMessageQueue(queue, message){
         });
 
         channel.sendToQueue(queue,Buffer.from(message));
-        console.log(" [x] Sent %s", message);
     })
     setTimeout(()=>{
         connection.close();

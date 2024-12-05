@@ -1,6 +1,6 @@
 import express from "express";
 import wialonService from "../services/wialonService.js";
-import sendMessageQueue from "../services/messaging/send.js"
+import sendMessageQueue from "../services/messaging/send.js";
 
 const router = express.Router();
 
@@ -13,15 +13,12 @@ router.get("/authentication", async (req, res) => {
 });
 
 router.get("/getItems", async (req, res) => {
-
   let items = "";
   let sessionId = "";
   try {
-
-     sessionId = await wialonService.wialonAuthentication();
-     items = await wialonService.wialonGetItens(sessionId[0].eid)
-     items = JSON.stringify(items)
-
+    sessionId = await wialonService.wialonAuthentication();
+    items = await wialonService.wialonGetItems(sessionId[0].eid);
+    items = JSON.stringify(items);
   } catch (e) {
     console.error("ERRO: ", e.message);
     return res.status(500).json({
@@ -29,10 +26,9 @@ router.get("/getItems", async (req, res) => {
       message: e.message,
     });
   }
-  
-  res.send(JSON.parse(items))
-  sendMessageQueue('items', items)
 
+  res.send(JSON.parse(items));
+  sendMessageQueue("items", items);
 });
 
 export default router;
