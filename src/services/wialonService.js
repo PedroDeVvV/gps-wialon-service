@@ -1,5 +1,6 @@
 import "dotenv/config";
 import axios from "axios";
+import database from "../repository/connection.js";
 
 const apiKey = process.env.TOKEN_WIALON;
 
@@ -14,7 +15,7 @@ async function wialonAuthentication() {
       data.push(response.data);
     })
     .catch((e) => {
-      console.log("Erro ao fazer requisição no wialon: ", e);
+      console.error("Erro ao fazer requisição no wialon: ", e);
       data.push(e);
     });
   return data;
@@ -35,14 +36,116 @@ async function wialonGetItems(sid) {
     to: 0,
   };
 
-  const encodedParams = encodeURIComponent(JSON.stringify(params));
-  const response = await axios.get(
-    `https://hst-api.wialon.com/wialon/ajax.html?svc=core/search_items&sid=${sid}&params=${encodedParams}`
-  );
-
-  data.push(response.data);
+  try {
+    const encodedParams = encodeURIComponent(JSON.stringify(params));
+    const response = await axios.get(
+      `https://hst-api.wialon.com/wialon/ajax.html?svc=core/search_items&sid=${sid}&params=${encodedParams}`
+    );
+    data.push(response.data);
+  } catch (e) {
+    console.error("Erro ao requisitar items: ", e);
+  }
 
   return data;
 }
 
-export default { wialonAuthentication, wialonGetItems };
+function filterName(name) {
+  let items = [];
+  let category = name.split(" ")[0] || "0000";
+  let concessionaire = name.split(" ")[1] || "0000";
+  let plate = name.split("(")[1];
+  if (!plate) {
+    plate = "0000";
+  } else {
+    plate = plate.split(")")[0];
+  }
+
+  items.push(category, concessionaire, plate);
+
+  return items;
+}
+
+async function selectedItems(items) {
+  const gpsItems = items[0]?.items;
+  let itemId,
+    category,
+    concessionaire,
+    name,
+    plate,
+    longitude,
+    latitude,
+    date,
+    speedAverage;
+
+  for (let i = 0; i < gpsItems.length; i++) {
+    let filteredName = filterName(gpsItems[i]?.nm);
+    itemId = gpsItems[i]?.id;
+    category = filteredName[0];
+    concessionaire = filteredName[1];
+    plate = filteredName[2];
+    name =
+      gpsItems[i].nm.split(" ")[3] + " " + gpsItems[i]?.nm.split(" ")[4] || " ";
+    latitude = gpsItems[i]?.pos?.x;
+    longitude = gpsItems[i]?.pos?.y;
+    date = new Date();
+
+    let overspeed = gpsItems[i]?.lmsg?.p?.overspeed || 0;
+    let maxSpeed = gpsItems[i]?.lmsg?.p?.max_speed || 0;
+    speedAverage = Math.floor((overspeed + maxSpeed) / 2);
+
+    await saveItems(
+      itemId,
+      category,
+      concessionaire,
+      name,
+      plate,
+      latitude,
+      longitude,
+      date,
+      speedAverage
+    );
+  }
+  return;
+}
+
+async function saveItems(
+  itemId,
+  category = "",
+  concessionaire = "",
+  name,
+  plate = "",
+  latitude,
+  longitude,
+  date,
+  speedAverage
+) {
+  const sql =
+    "INSERT INTO location_history(item_id, category, concessionaire, name, plate, longitude, latitude, date, speed_average) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);";
+
+  const values = [
+    itemId,
+    category,
+    concessionaire,
+    name,
+    plate,
+    longitude,
+    latitude,
+    date,
+    speedAverage,
+  ];
+
+  try {
+    const conn = await database.connect();
+    await conn.query(sql, values);
+    conn.end();
+  } catch (e) {
+    console.error("Erro ao salvar items: ", e);
+  }
+}
+
+export default {
+  wialonAuthentication,
+  wialonGetItems,
+  saveItems,
+  selectedItems,
+};
