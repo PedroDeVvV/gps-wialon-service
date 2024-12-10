@@ -85,8 +85,8 @@ async function selectedItems(items) {
     plate = filteredName[2];
     name =
       gpsItems[i].nm.split(" ")[3] + " " + gpsItems[i]?.nm.split(" ")[4] || " ";
-    latitude = gpsItems[i]?.pos?.x;
-    longitude = gpsItems[i]?.pos?.y;
+    latitude = gpsItems[i]?.pos?.y;
+    longitude = gpsItems[i]?.pos?.x;
     date = new Date();
 
     let overspeed = gpsItems[i]?.lmsg?.p?.overspeed || 0;
@@ -99,8 +99,8 @@ async function selectedItems(items) {
       concessionaire,
       name,
       plate,
-      latitude,
       longitude,
+      latitude,
       date,
       speedAverage
     );
@@ -114,8 +114,8 @@ async function saveItems(
   concessionaire = "",
   name,
   plate = "",
-  latitude,
   longitude,
+  latitude,
   date,
   speedAverage
 ) {
@@ -133,6 +133,8 @@ async function saveItems(
     date,
     speedAverage,
   ];
+
+  console.log(values);
 
   try {
     const conn = await database.connect();
