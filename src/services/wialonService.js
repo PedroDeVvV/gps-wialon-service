@@ -134,8 +134,6 @@ async function saveItems(
     speedAverage,
   ];
 
-  console.log(values);
-
   try {
     const conn = await database.connect();
     await conn.query(sql, values);
