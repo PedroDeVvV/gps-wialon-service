@@ -4,8 +4,12 @@ import database from "../repository/connection.js";
 
 const apiKey = process.env.TOKEN_WIALON;
 
-async function wialonGenerateToken(){
-  return "Token novo aqui"
+async function wialonGenerateToken(sid){
+  let token = apiKey;
+  let newToken = [];
+  axios.get(`https://hst-api.wialon.com/wialon/ajax.html?svc=token/update&sid=${sid}&params={"callMode":"update", "at":"0", "userId":"ITS VERACRUZ","p":"{}", "h":"${apiKey}", "app":"gps_service", "dur":"1000", "fl":"-1"}`)
+  .then(response => newToken.push( response.data))
+  return newToken;
 }
 
 

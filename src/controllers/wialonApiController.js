@@ -11,8 +11,9 @@ router.get("/getItems", async (req, res) => {
   let items;
   let sessionId;
   try {
-    token = await wialonService.wialonGenerateToken();
+    
     sessionId = await wialonService.wialonAuthentication();
+    token = await wialonService.wialonGenerateToken(sessionId[0].eid);
     items = await wialonService.wialonGetItems(sessionId[0].eid);
     items = JSON.stringify(items);
     await wialonService.selectedItems(JSON.parse(items));
