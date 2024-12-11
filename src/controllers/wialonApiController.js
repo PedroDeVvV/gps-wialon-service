@@ -6,9 +6,12 @@ import sendMessageQueue from "../services/messaging/send.js";
 const router = express.Router();
 
 router.get("/getItems", async (req, res) => {
+  
+  let token;
   let items;
   let sessionId;
   try {
+    token = await wialonService.wialonGenerateToken();
     sessionId = await wialonService.wialonAuthentication();
     items = await wialonService.wialonGetItems(sessionId[0].eid);
     items = JSON.stringify(items);
@@ -25,6 +28,7 @@ router.get("/getItems", async (req, res) => {
   const queueName = process.env.QUEUE_NAME;
   res.status(200).json({
     success: true,
+    token: token,
     data: dataJson[0].items,
   });
   sendMessageQueue(queueName, items);

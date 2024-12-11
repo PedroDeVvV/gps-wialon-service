@@ -4,6 +4,11 @@ import database from "../repository/connection.js";
 
 const apiKey = process.env.TOKEN_WIALON;
 
+async function wialonGenerateToken(){
+  return "Token novo aqui"
+}
+
+
 async function wialonAuthentication() {
   const data = [];
 
@@ -148,4 +153,5 @@ export default {
   wialonGetItems,
   saveItems,
   selectedItems,
+  wialonGenerateToken,
 };
