@@ -1,3 +1,4 @@
+import "dotenv/config";
 import amqp from "amqplib/callback_api.js";
 
 amqp.connect("amqp://localhost", (error0, connection) => {
@@ -6,6 +7,7 @@ amqp.connect("amqp://localhost", (error0, connection) => {
   }
 
   const queue = process.env.QUEUE_NAME;
+
   connection.createChannel((error1, channel) => {
     if (error1) {
       throw error1;
