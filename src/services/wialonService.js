@@ -4,50 +4,50 @@ import database from "../repository/connection.js";
 import emailService from "./emailService.js";
 const secondaryKey = process.env.SECONDARY_TOKEN
 
-async function wialonGenerateToken(sid){
-
+async function wialonGenerateToken(sid, token) {
   //Esta função vai atualizar o token que está dentro da .env automaticamente toda vez que chegar
   // uma requisição para ela.
+  try {
+    const validatedToken = await axios.get(
+      `https://hst-api.wialon.com/wialon/ajax.html?svc=token/update&sid=${sid}&params={"callMode":"update", "at":"0", "userId":"ITS VERACRUZ","p":"{}", "h":"${token}", "app":"gps_service", "dur":"0", "fl":"-1"}`)
+    if (validatedToken && validatedToken.data) {
+      return
+    }
 
-  let newToken = [];
-  axios.get(`https://hst-api.wialon.com/wialon/ajax.html?svc=token/update&sid=${sid}&params={"callMode":"update", "at":"0", "userId":"ITS VERACRUZ","p":"{}", "h":"${apiKey}", "app":"gps_service", "dur":"1000", "fl":"-1"}`)
-  .then(response => newToken.push( response.data))
-  .catch((e) =>{
-    console.error(" Problema com a atualização do token " + e)
-    // se houver erro com a autenticação do token, envia um email para nossa equipe
-   //const resp =  emailService.sendWialonErrorApiEmail(e);
+  } catch (e) {
+    console.error("Não foi possivel atualizar o token" + e)
+  }
 
-    // FALTA FAZER SERVIÇO PARA UTILIZAR O OUTRO TOKEN COMO PADRÃO
-    newToken.push(e)
-  })
-  
-    
-  return newToken;
 }
 
 
-async function wialonAuthentication(apiKey, loginTries) {
+async function wialonAuthentication(token, loginTries) {
   const data = []
-  try{
-  const response = await axios.get(
-      `https://hst-api.wialon.com/wialon/ajax.html?svc=token/login&params={"token":"${apiKey}"}`
+  try {
+    const response = await axios.get(
+      `https://hst-api.wialon.com/wialon/ajax.html?svc=token/login&params={"token":"${token}"}`
     )
-    if (response.data && response.data.eid){
+    if (response.data.eid) {
       data.push(response.data)
-      console.log("Erro abaixo")
-      console.log(data)
+      data.push(token)
       return data
-    }else {
+    } else {
       throw new Error("Resposta inesperada da API Wialon: " + JSON.stringify(response.data));
     }
-  }catch(e){
-    console.error('Erro ao autenticar com o token primário: ' + e)
-      if(apiKey === secondaryKey)loginTries++;
-      if(loginTries > 3)throw new Error("Ambos os tokens estão com problema. Favor, renovar manualmente.");
-      console.error("Tentativa com token secundário. Tentativa " + loginTries);
-      return await wialonAuthentication(secondaryKey, loginTries);
+  } catch (e) {
+    console.error('Erro ao autenticar com o token primário: ' + e);
+    if (loginTries < 1) {
+      console.error('Tentando token primário mais uma vez');
+      return await wialonAuthentication(token, 1);
+    }
+
+
+    if (token === secondaryKey) loginTries++;
+    if (loginTries > 3) throw new Error("Ambos os tokens estão com problema. Favor, renovar manualmente.");
+    console.error("Tentativa com token secundário. Tentativa " + loginTries);
+    return await wialonAuthentication(secondaryKey, loginTries);
   }
-  
+
 }
 
 
@@ -141,10 +141,10 @@ async function selectedItems(items) {
 
 async function saveItems(
   itemId,
-  category = "",
-  concessionaire = "",
+  category,
+  concessionaire,
   name,
-  plate = "",
+  plate, 
   longitude,
   latitude,
   date,
