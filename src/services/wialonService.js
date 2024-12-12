@@ -1,25 +1,56 @@
 import "dotenv/config";
 import axios from "axios";
 import database from "../repository/connection.js";
+import emailService from "./emailService.js";
+const secondaryKey = process.env.SECONDARY_TOKEN
 
-const apiKey = process.env.TOKEN_WIALON;
+async function wialonGenerateToken(sid, token) {
+  //Esta função vai atualizar o token que está dentro da .env automaticamente toda vez que chegar
+  // uma requisição para ela.
+  try {
+    const validatedToken = await axios.get(
+      `https://hst-api.wialon.com/wialon/ajax.html?svc=token/update&sid=${sid}&params={"callMode":"update", "at":"0", "userId":"ITS VERACRUZ","p":"{}", "h":"${token}", "app":"gps_service", "dur":"0", "fl":"-1"}`)
+    if (validatedToken && validatedToken.data) {
+      return
+    }
 
-async function wialonAuthentication() {
-  const data = [];
+  } catch (e) {
+    console.error("Não foi possivel atualizar o token" + e)
+  }
 
-  await axios
-    .get(
-      `https://hst-api.wialon.com/wialon/ajax.html?svc=token/login&params={"token":"${apiKey}"}`
-    )
-    .then((response) => {
-      data.push(response.data);
-    })
-    .catch((e) => {
-      console.error("Erro ao fazer requisição no wialon: ", e);
-      data.push(e);
-    });
-  return data;
 }
+
+
+async function wialonAuthentication(token, loginTries) {
+  const data = []
+  try {
+    const response = await axios.get(
+      `https://hst-api.wialon.com/wialon/ajax.html?svc=token/login&params={"token":"${token}"}`
+    )
+    if (response.data.eid) {
+      data.push(response.data)
+      data.push(token)
+      return data
+    } else {
+      throw new Error("Resposta inesperada da API Wialon: " + JSON.stringify(response.data));
+    }
+  } catch (e) {
+    console.error('Erro ao autenticar com o token primário: ' + e);
+    if (loginTries < 1) {
+      console.error('Tentando token primário mais uma vez');
+      return await wialonAuthentication(token, 1);
+    }
+
+
+    if (token === secondaryKey) loginTries++;
+    if (loginTries > 3) throw new Error("Ambos os tokens estão com problema. Favor, renovar manualmente.");
+    console.error("Tentativa com token secundário. Tentativa " + loginTries);
+    return await wialonAuthentication(secondaryKey, loginTries);
+  }
+
+}
+
+
 
 async function wialonGetItems(sid) {
   const data = [];
@@ -110,10 +141,10 @@ async function selectedItems(items) {
 
 async function saveItems(
   itemId,
-  category = "",
-  concessionaire = "",
+  category,
+  concessionaire,
   name,
-  plate = "",
+  plate, 
   longitude,
   latitude,
   date,
@@ -148,4 +179,5 @@ export default {
   wialonGetItems,
   saveItems,
   selectedItems,
+  wialonGenerateToken,
 };
