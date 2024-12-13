@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import wialonService from "../services/wialonService.js";
 import sendMessageQueue from "../services/messaging/send.js";
+
 let token = process.env.TOKEN_WIALON;
 const router = express.Router();
 

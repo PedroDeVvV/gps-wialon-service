@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import router from "./routes/routes.js"
 import "./services/messaging/send.js";
+import axios from 'axios'
 
 const app = express();
 let port = process.env.APPLICATION_PORT;
