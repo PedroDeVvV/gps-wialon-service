@@ -114,7 +114,9 @@ async function selectedItems(items) {
       gpsItems[i].nm.split(" ")[3] + " " + gpsItems[i]?.nm.split(" ")[4] || " ";
     latitude = gpsItems[i]?.pos?.y;
     longitude = gpsItems[i]?.pos?.x;
-    date = new Date();
+    let dateUS = new Date();
+    let utcOffset = -3 * 60 * 60 * 1000;
+    date = new Date(dateUS.getTime() + utcOffset);
 
     let overspeed = gpsItems[i]?.lmsg?.p?.overspeed || 0;
     let maxSpeed = gpsItems[i]?.lmsg?.p?.max_speed || 0;
@@ -169,23 +171,6 @@ async function saveItems(
     console.error("Erro ao salvar items: ", e);
   }
 }
-
-async function main(url) {
-  await axios
-  .get(url)
-  .then((response) => {
-    console.info(response.data);
-  })
-  .catch((e) => console.error("Erro ao fazer requisição com timer: ", e));
-}
-
-new Promise((resolve, reject) => {
-  let time = process.env.TIME_REQUEST ?? 30000; 
-  let url = process.env.URL_MAIN_REQUEST;
-  setInterval(() => {
-    main(url);
-  }, time);
-});
 
 export default {
   wialonAuthentication,

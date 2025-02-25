@@ -2,7 +2,7 @@ import amqp from 'amqplib/callback_api.js';
 
 function sendMessageQueue(queue, message){
     return new Promise(()=>{
-    amqp.connect('amqp://localhost', (error0, connection)=>{
+    amqp.connect('amqp://root:trcvbr18@host.docker.internal:5672', (error0, connection)=>{
     if(error0){
         throw error0;
     }
